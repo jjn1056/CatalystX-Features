@@ -22,7 +22,7 @@ sub add_columns {
     created => {
       data_type => 'datetime',
       retrieve_on_insert => 1,
-      default_value => \'now()',
+      set_on_create => 1,
   }) unless $class->has_column('created');
 
   return @ret;

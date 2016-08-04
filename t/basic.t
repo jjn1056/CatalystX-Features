@@ -37,6 +37,12 @@ BEGIN {
   sub user :Local Args(1) {
     my ($self, $c) = @_;
 
+    use Devel::Dwarn;
+    Dwarn( +{$c->model("Features")->flags} );
+
+    $c->model("Features")->set_features("feature3", 1);
+    Dwarn( +{$c->model("Features")->flags} );
+
     $c->res->body('test');
   }
 
@@ -59,6 +65,12 @@ BEGIN {
   MyApp->config(
     'Model::Features' => {
       connect_info => [ sub { Schema()->storage->dbh } ],
+      features => {
+        feature1 => 1,
+        feature2 => 0,
+        feature3 => 0,
+        feature4 => 0,
+      },
     },
     'Model::Schema' => {
       schema_class => 'MyApp::Schema',
@@ -67,9 +79,11 @@ BEGIN {
   );
 
   MyApp->setup;
+  MyApp->model('Features')->schema->deploy;
 
 }
 
+BEGIN { $ENV{MYAPP_FEATURE2} = 1 }
 use Catalyst::Test 'MyApp';
 
 {
