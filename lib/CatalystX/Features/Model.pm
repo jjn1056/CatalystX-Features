@@ -15,11 +15,13 @@ sub ACCEPT_CONTEXT {
   $self->populate_env_features($ctx)
     unless $self->schema->env_features;
   if(ref $ctx) {
-    return $self->clone(
+    my $clone = $self->clone(
       ctx=>$ctx,
       env_features=>$self->schema->env_features,
       config_features=>$self->schema->config_features,
     );
+    $clone->connection( @{$self->storage->connect_info});
+    return $clone;
   } else {
     return $self;
   }

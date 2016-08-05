@@ -25,28 +25,29 @@ sub deploy {
 
 sub setup {
   my $self = shift;
-  my %flags = %{$self->config_features};
-  foreach my $key(keys %flags) {
-    $self->resultset('Flag')
-      ->update_or_create({key=>$key,value=>0});
-  }
 }
 
 sub flags {
   my $self = shift;
   my %flags = (
     %{$self->config_features||+{}},
-    %{$self->env_features||+{}});
+    %{$self->env_features||+{}},
+    (map { $_->key => $_->value } 
+      $self->resultset('Flag')->all),
+  );
   return %flags;
 }
 
 sub set_features {
   my ($self, %args) = @_;
-  use Devel::Dwarn;
-  Dwarn $self->resultset('Flag')->first;
+  my %flags = %{$self->config_features};
   foreach my $key(keys %args) {
-    #$self->resultset('Flag')
-    # ->find({key=>$key});;
+    if(exists $flags{$key}) {
+      $self->resultset('Flag')
+        ->update_or_create({key=>$key, value=>$args{$key}});
+    } else {
+      die "Feature Flag '$key' is not allowed";
+    }
   }
 }
 

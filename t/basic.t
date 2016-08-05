@@ -41,6 +41,7 @@ BEGIN {
     Dwarn( +{$c->model("Features")->flags} );
 
     $c->model("Features")->set_features("feature3", 1);
+    
     Dwarn( +{$c->model("Features")->flags} );
 
     $c->res->body('test');
