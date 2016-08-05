@@ -40,7 +40,7 @@ BEGIN {
     use Devel::Dwarn;
     Dwarn( +{$c->model("Features")->flags} );
 
-    $c->model("Features")->set_features("feature3", 1);
+    $c->model("Features")->set_feature_overrides("feature3", 1);
     
     Dwarn( +{$c->model("Features")->flags} );
 

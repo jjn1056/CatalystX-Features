@@ -8,6 +8,7 @@ use base 'DBIx::Class::Schema';
 
 __PACKAGE__->mk_classdata('config_features');
 __PACKAGE__->mk_classdata('env_features');
+__PACKAGE__->mk_classdata('db_features');
 
 __PACKAGE__->load_components(qw/
   Helper::Schema::QuoteNames
@@ -25,6 +26,7 @@ sub deploy {
 
 sub setup {
   my $self = shift;
+  $self->reload_db_features;
 }
 
 sub flags {
@@ -32,13 +34,21 @@ sub flags {
   my %flags = (
     %{$self->config_features||+{}},
     %{$self->env_features||+{}},
-    (map { $_->key => $_->value } 
-      $self->resultset('Flag')->all),
+    %{$self->db_features||+{}},
   );
   return %flags;
 }
 
-sub set_features {
+sub reload_db_features {
+  my $self = shift;
+  my %features = map {
+    $_->key => $_->value
+  } $self->resultset('Flag')->all;
+
+  $self->db_features(\%features);
+}
+
+sub set_feature_overrides {
   my ($self, %args) = @_;
   my %flags = %{$self->config_features};
   foreach my $key(keys %args) {
@@ -46,9 +56,25 @@ sub set_features {
       $self->resultset('Flag')
         ->update_or_create({key=>$key, value=>$args{$key}});
     } else {
-      die "Feature Flag '$key' is not allowed";
+      die "Feature Flag '$key' is not allowed; Can't set!";
     }
   }
+  $self->reload_db_features;
+}
+
+sub remove_feature_overrides {
+  my ($self, @args) = @_;
+  my %flags = %{$self->config_features};
+  foreach my $key(@args) {
+    if(exists $flags{$key}) {
+      $self->resultset('Flag')
+        ->find({key=>$key})
+        ->delete;
+    } else {
+      die "Feature Flag '$key' is not allowed; Can't remove!";
+    }
+  }
+  $self->reload_db_features;
 }
 
 1;
